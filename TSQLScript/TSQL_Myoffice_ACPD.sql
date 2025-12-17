@@ -1,5 +1,5 @@
 
-/****** Object:  Table [dbo].[MyOffice_ACPD]    Script Date: 2024/12/18 §W§» 11:24:51 ******/
+/****** Object:  Table [dbo].[MyOffice_ACPD]    Script Date: 2024/12/18 ‰∏äÂçà 11:24:51 ******/
 SET ANSI_NULLS ON
 GO
 

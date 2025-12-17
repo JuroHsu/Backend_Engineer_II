@@ -48,7 +48,7 @@ BEGIN
     SET @dayCode = RIGHT('000' + CONVERT(VARCHAR, @dayOfYear), 3);
     SET @secondCode = RIGHT('00000' + CONVERT(VARCHAR, @secondOfDay), 5);
 
-    -- ґM§д Table ЄєДж¦м
+    -- е°‹ж‰ѕ Table зљ„ж¬„дЅЌ
     SELECT 
         TOP 1 
         @SIDRowName = STUFF((
@@ -60,9 +60,9 @@ BEGIN
             FOR XML PATH('')
         ), 1, 2, '') 
     FROM sys.indexes i 
-    WHERE i.object_id = OBJECT_ID(@TableName) AND i.index_id > 0  -- ±Ж°Ј°п
+    WHERE i.object_id = OBJECT_ID(@TableName) AND i.index_id > 0  -- жЋ’й™¤е †
 
-    -- ґM§д№wі]Єє
+    -- е°‹ж‰ѕй ђиЁ­зљ„
     WHILE 1 = 1
     BEGIN
 

@@ -4,48 +4,48 @@ GO
 
 	CREATE PROCEDURE [dbo].[usp_AddLog]
 	(
-		@_InBox_ReadID					tinyint					,		-- ���� Log �ɬO�ϥβĴX��
-		@_InBox_SPNAME					nvarchar(120)		,		-- ���檺�w�s�{�ǦW��
-		@_InBox_GroupID					uniqueidentifier	,		-- ����s�եN�X
-		@_InBox_ExProgram				nvarchar(40)			,		-- ���檺�ʧ@�O����
-		@_InBox_ActionJSON			nvarchar(Max)		,		-- ���檺�L�{�O����
-		@_OutBox_ReturnValues		nvarchar(Max)		output -- �^�ǰ��檺����
+		@_InBox_ReadID					tinyint					,		-- 執行 Log 時是使用第幾版
+		@_InBox_SPNAME					nvarchar(120)		,		-- 執行的預存程序名稱
+		@_InBox_GroupID					uniqueidentifier	,		-- 執行群組代碼
+		@_InBox_ExProgram				nvarchar(40)			,		-- 執行的動作是什麼
+		@_InBox_ActionJSON			nvarchar(Max)		,		-- 執行的過程是什麼
+		@_OutBox_ReturnValues		nvarchar(Max)		output -- 回傳執行的項目
 	) 
 	AS
 	
-	-- ========================= �s�W�P���@�`�N�ƶ�(�������u�W�w) =====================
-	-- �����`�ѻ����мg�b�o�̡A�H�K�q Visual Studio ��� SQL �������e�S���@�_�W�h
-	-- �p�G�n�ק�ХH�o�ɮ׬��D�A�åH SSMS 19.0 ���H�W�ӭק�H�K�����㪺�s��Ҧ�
-	-- �s��ɽХ�ѡu�M�פH���v�Ӷi��������ץ��A�ק�e�]�нT�w�b C# Class ���A
-	-- �����ǵ{�Ǧ��e�Ѧҡf��æA�[�H�T�w�ק�ᤣ�|������v�T�A�A��ץ��H�U TSQL ���y�k�A�H�K
-	-- �A�ק��A�|�ϱo��L�{�Ǥ]���ޥΨ�H�U����ƦӦ��Ҽv�T�C
+	-- ========================= 新增與維護注意事項(必須遵守規定) =====================
+	-- 相關注解說明請寫在這裡，以免從 Visual Studio 轉至 SQL 說明內容沒有一起上去
+	-- 如果要修改請以這檔案為主，並以 SSMS 19.0 版以上來修改以便有完整的編輯模式
+	-- 編輯時請交由「專案人員」來進行相關的修正，修改前也請確定在 C# Class 內，
+	-- 有那些程序有〔參考〕到並再加以確定修改後不會有任何影響，再行修正以下 TSQL 的語法，以免
+	-- 你修改後，會使得其他程序也有引用到以下的資料而有所影響。
 	-- ==========================================================================
-	-- ���w�ɮס@�Gusp_AddLog �O�����檺�ʧ@.sql
-	-- �M�׶��ء@�G
-	-- �M�ץγ~�@�G�O�� sp ���檺�ʧ@����
-	-- �M�׸�Ʈw�G
-	-- �M�׸�ƪ��G
-	-- �M�פH���@�G
-	-- �M�פ���@�G
-	-- �M�׻����@�G@_InBox_ReadID				�̥D�n�O���Ӱ��O�������ϥΡA�]�� Log �O������|�H���P�����e�άO���檺�{�Ǥ��@�w�|�����P���O�����e
-	-- �@�@�@�@�@�G@_InBox_ActionJSON		�O�O�����檺���ػP���e�H�Q�������X�R���O�d
-	-- �@�@�@�@�@�G@_InBox_GroupID				�̥D�n�b����L�{�|���@��q���L�{�A�i�H�z�L�o GUID �i�H�F�Ѩ��Ӱ���L�{�A���M��L���ؤ]�O����
-	--																			�������D����쨺�@�Ӷ��ؤF??
+	-- 指定檔案　：usp_AddLog 記錄執行的動作.sql
+	-- 專案項目　：
+	-- 專案用途　：記錄 sp 執行的動作為何
+	-- 專案資料庫：
+	-- 專案資料表：
+	-- 專案人員　：
+	-- 專案日期　：
+	-- 專案說明　：@_InBox_ReadID				最主要是拿來做記錄版本使用，因為 Log 記錄往後會以不同的內容或是執行的程序不一定會有不同的記錄內容
+	-- 　　　　　：@_InBox_ActionJSON		是記錄執行的項目與內容以利有往後擴充的保留
+	-- 　　　　　：@_InBox_GroupID				最主要在執行過程會有一整段的過程，可以透過這 GUID 可以了解到整個執行過程，不然其他項目也記錄時
+	--																			都不知道執行到那一個項目了??
 	-- =========================================================================
 
-	--======= �ŧi�w�]���ܼ�	================
-	DECLARE @_StoredProgramsNAME nvarchar(100) = 'usp_AddLog' -- ���涵��
+	--======= 宣告預設的變數	================
+	DECLARE @_StoredProgramsNAME nvarchar(100) = 'usp_AddLog' -- 執行項目
 	
-	--======= �ŧi�n�x�s������	================
+	--======= 宣告要儲存的表格	================
 	DECLARE @_ReturnTable Table 
 	(
-		[RT_Status]					bit							,		--���浲�G
-		[RT_ActionValues]		nvarchar(2000)			--�^�ǵ��G����
+		[RT_Status]					bit							,		--執行結果
+		[RT_ActionValues]		nvarchar(2000)			--回傳結果為何
 	) 
 	
-	--======= ����欰�P�ʧ@	================
+	--======= 執行行為與動作	================
 	-- @_InBox_ServiceID				=	0
-	-- ��°O���@�����椺�e
+	-- 單純記錄一筆執行內容
 	--=====================================
 
 	if(@_InBox_ReadID = 0) 
